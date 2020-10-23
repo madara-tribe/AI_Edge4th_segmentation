@@ -1,0 +1,31 @@
+**************************************************
+* VITIS_AI Compilation - Xilinx Inc.
+**************************************************
+custom.json
+
+Kernel topology "unet_kernel_graph.jpg" for network "unet"
+kernel list info for network "unet"
+                               Kernel ID : Name
+                                       0 : unet
+
+                             Kernel Name : unet
+--------------------------------------------------------------------------------
+                             Kernel Type : DPUKernel
+                               Code Size : 2.93MB
+                              Param Size : 30.92MB
+                           Workload MACs : 248059.33MOPS
+                         IO Memory Space : 45.01MB
+                              Mean Value : 0, 0, 0, 
+                      Total Tensor Count : 36
+                Boundary Input Tensor(s)   (H*W*C)
+                            input_1:0(0) : 304*480*3
+
+               Boundary Output Tensor(s)   (H*W*C)
+separable_conv2d_1_separable_conv2d:0(0) : 304*480*5
+
+                        Total Node Count : 35
+                           Input Node(s)   (H*W*C)
+                 conv2d_1_convolution(0) : 304*480*3
+
+                          Output Node(s)   (H*W*C)
+  separable_conv2d_1_separable_conv2d(0) : 304*480*5

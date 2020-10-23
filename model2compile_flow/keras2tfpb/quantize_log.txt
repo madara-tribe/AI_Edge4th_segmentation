@@ -1,0 +1,16 @@
+(vitis-ai-tensorflow) hagi@dl-mario:/workspace/wk/keras2tfpb$ sudo chmod 755 quantize.sh
+(vitis-ai-tensorflow) hagi@dl-mario:/workspace/wk/keras2tfpb$ ./quantize.sh
+Using TensorFlow backend.
+script running on folder  /workspace/wk/keras2tfpb
+CALIB DIR  workspace/dataset1/img_calib
+INFO: Checking Float Graph...
+INFO: Float Graph Check Done.
+INFO: Calibrating for 10 iterations...
+100% (10 of 10) |########################| Elapsed Time: 0:10:46 Time:  0:10:46
+INFO: Calibration Done.
+INFO: Generating Deploy Model...
+INFO: Deploy Model Generated.
+********************* Quantization Summary *********************      
+INFO: Output:       
+  quantize_eval_model: quantized_model/quantize_eval_model.pb       
+  deploy_model: quantized_model/deploy_model.pb

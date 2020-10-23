@@ -1,0 +1,133 @@
+loss  category coross entropy
+
+computing IoU over testing data set:
+class ( 0)         None: #TP= 590858, #FP=  19417, #FN=   6750, IoU=0.958
+class ( 1)          Sky: #TP=   9075, #FP=   1698, #FN=  12079, IoU=0.397
+class ( 2)         Wall: #TP=      0, #FP=      0, #FN=   1008, IoU=0.000
+class ( 3)         Pole: #TP=   3880, #FP=   1310, #FN=   4291, IoU=0.409
+class ( 4)         Road: #TP= 119664, #FP=   6738, #FN=   5035, IoU=0.910
+_________________
+Mean IoU: 0.535
+
+now computing IoU over validation data set:
+class ( 0)         None: #TP= 170755, #FP=  19391, #FN=  14809, IoU=0.833
+class ( 1)          Sky: #TP=    824, #FP=   3122, #FN=   9209, IoU=0.063
+class ( 2)         Wall: #TP=      0, #FP=      0, #FN=     47, IoU=0.000
+class ( 3)         Pole: #TP=     27, #FP=    492, #FN=   1993, IoU=0.011
+class ( 4)         Road: #TP=  41489, #FP=  14780, #FN=  11727, IoU=0.610
+_________________
+Mean IoU: 0.303
+
+binary_crossentropy
+Mean IoU: 0.278
+_________________
+Mean IoU: 0.252
+
+
+loss:category coross entropy
+delete maxpooling2d
+224*224
+
+computing IoU over testing data set:
+class ( 0)         None: #TP= 550220, #FP=  22719, #FN=  47388, IoU=0.887
+class ( 1)          Sky: #TP=  19981, #FP=  43404, #FN=   1173, IoU=0.310
+class ( 2)         Wall: #TP=      0, #FP=      0, #FN=   1008, IoU=0.000
+class ( 3)         Pole: #TP=   2888, #FP=   2439, #FN=   5283, IoU=0.272
+class ( 4)         Road: #TP=  94347, #FP=  16642, #FN=  30352, IoU=0.668
+_________________
+Mean IoU: 0.427
+
+now computing IoU over validation data set:
+class ( 0)         None: #TP= 155541, #FP=  16585, #FN=  30023, IoU=0.769
+class ( 1)          Sky: #TP=   3470, #FP=  20540, #FN=   6563, IoU=0.113
+class ( 2)         Wall: #TP=      0, #FP=      0, #FN=     47, IoU=0.000
+class ( 3)         Pole: #TP=    486, #FP=   2667, #FN=   1534, IoU=0.104
+class ( 4)         Road: #TP=  32682, #FP=  18909, #FN=  20534, IoU=0.453
+_________________
+Mean IoU: 0.288
+
+
+loss:cce
+delete maxpoooling2d
+1216/4, 1900/4
+computing IoU over testing data set:
+class ( 0)         None: #TP=1660858, #FP= 120511, #FN=  76686, IoU=0.894
+class ( 1)          Sky: #TP=  46309, #FP=  34674, #FN=  15442, IoU=0.480
+class ( 2)         Wall: #TP=   1528, #FP=   1412, #FN=   1357, IoU=0.356
+class ( 3)         Pole: #TP=   9237, #FP=   8131, #FN=  14603, IoU=0.289
+class ( 4)         Road: #TP= 262830, #FP=  43310, #FN=  99950, IoU=0.647
+_________________
+Mean IoU: 0.533
+
+now computing IoU over validation data set:
+class ( 0)         None: #TP= 465598, #FP=  75612, #FN=  73920, IoU=0.757
+class ( 1)          Sky: #TP=   6887, #FP=  37032, #FN=  22401, IoU=0.104
+class ( 2)         Wall: #TP=      0, #FP=     51, #FN=    142, IoU=0.000
+class ( 3)         Pole: #TP=   1524, #FP=   8044, #FN=   4406, IoU=0.109
+class ( 4)         Road: #TP=  91302, #FP=  43550, #FN=  63420, IoU=0.460
+_________________
+Mean IoU: 0.286
+
+loss:cce
+delete maxpoooling2d
+1216/4, 1900/4
+resize with interporation anno, jpeg
+computing IoU over testing data set:
+class ( 0)         None: #TP=1659469, #FP= 120649, #FN=  78075, IoU=0.893
+class ( 1)          Sky: #TP=  46623, #FP=  35832, #FN=  15128, IoU=0.478
+class ( 2)         Wall: #TP=    290, #FP=    135, #FN=   2595, IoU=0.096
+class ( 3)         Pole: #TP=  10138, #FP=   7590, #FN=  13702, IoU=0.323
+class ( 4)         Road: #TP= 263121, #FP=  44953, #FN=  99659, IoU=0.645
+_________________
+Mean IoU: 0.487
+
+now computing IoU over validation data set:
+class ( 0)         None: #TP= 457021, #FP=  60927, #FN=  82497, IoU=0.761
+class ( 1)          Sky: #TP=  11008, #FP=  38469, #FN=  18280, IoU=0.162
+class ( 2)         Wall: #TP=      0, #FP=      0, #FN=    142, IoU=0.000
+class ( 3)         Pole: #TP=    805, #FP=   6560, #FN=   5125, IoU=0.064
+class ( 4)         Road: #TP=  99740, #FP=  55070, #FN=  54982, IoU=0.475
+_________________
+Mean IoU: 0.293
+
+loss: categocross entropy
+delete maxpllling2d
++scse
+
+class ( 0)         None: #TP= 591479, #FP=   7287, #FN=   6129, IoU=0.978
+class ( 1)          Sky: #TP=  19961, #FP=   2575, #FN=   1193, IoU=0.841
+class ( 2)         Wall: #TP=      0, #FP=      0, #FN=   1008, IoU=0.000
+class ( 3)         Pole: #TP=   4679, #FP=   2099, #FN=   3492, IoU=0.456
+class ( 4)         Road: #TP= 120709, #FP=   3851, #FN=   3990, IoU=0.939
+_________________
+Mean IoU: 0.643
+
+now computing IoU over validation data set:
+class ( 0)         None: #TP= 175771, #FP=  17927, #FN=   9793, IoU=0.864
+class ( 1)          Sky: #TP=    824, #FP=   1805, #FN=   9209, IoU=0.070
+class ( 2)         Wall: #TP=      0, #FP=      0, #FN=     47, IoU=0.000
+class ( 3)         Pole: #TP=    185, #FP=   1867, #FN=   1835, IoU=0.048
+class ( 4)         Road: #TP=  40811, #FP=  11690, #FN=  12405, IoU=0.629
+_________________
+Mean IoU: 0.322
+
+delete maxpoolinf2d
+no scse
+reseize conv2d layers
+computing IoU over testing data set:
+class ( 0)         None: #TP=6652852, #FP= 475761, #FN= 296743, IoU=0.896
+class ( 1)          Sky: #TP= 183464, #FP= 125959, #FN=  64004, IoU=0.491
+class ( 2)         Wall: #TP=      0, #FP=      0, #FN=  11514, IoU=0.000
+class ( 3)         Pole: #TP=  35123, #FP=  13419, #FN=  59971, IoU=0.324
+class ( 4)         Road: #TP=1065598, #FP= 203024, #FN= 385931, IoU=0.644
+_________________
+Mean IoU: 0.471
+
+now computing IoU over validation data set:
+class ( 0)         None: #TP=1932112, #FP= 297486, #FN= 226080, IoU=0.787
+class ( 1)          Sky: #TP=  41869, #FP= 104285, #FN=  75327, IoU=0.189
+class ( 2)         Wall: #TP=      0, #FP=      0, #FN=    596, IoU=0.000
+class ( 3)         Pole: #TP=   1751, #FP=   9653, #FN=  21821, IoU=0.053
+class ( 4)         Road: #TP= 345510, #FP= 185734, #FN= 273334, IoU=0.429
+_________________
+Mean IoU: 0.292

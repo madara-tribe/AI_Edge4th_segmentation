@@ -1,0 +1,23 @@
+(2143, 224, 224, 3) (2143, 224, 224, 5)
+1.0 0.0
+100it [00:05, 16.70it/s]
+(100, 224, 224, 3) (100, 224, 224, 5)
+1.0 0.0
+
+computing IoU over testing data set:
+class ( 0)         None: #TP=82498827, #FP=25028341, #FN=      0, IoU=0.767
+class ( 1)          Sky: #TP=      0, #FP=      0, #FN=3298947, IoU=0.000
+class ( 2)         Wall: #TP=      0, #FP=      0, #FN= 115693, IoU=0.000
+class ( 3)         Pole: #TP=      0, #FP=      0, #FN= 765871, IoU=0.000
+class ( 4)         Road: #TP=      0, #FP=      0, #FN=20847830, IoU=0.000
+_________________
+Mean IoU: 0.153
+
+now computing IoU over validation data set:
+class ( 0)         None: #TP=3852326, #FP=1165274, #FN=      0, IoU=0.768
+class ( 1)          Sky: #TP=      0, #FP=      0, #FN= 136536, IoU=0.000
+class ( 2)         Wall: #TP=      0, #FP=      0, #FN=   4217, IoU=0.000
+class ( 3)         Pole: #TP=      0, #FP=      0, #FN=  29990, IoU=0.000
+class ( 4)         Road: #TP=      0, #FP=      0, #FN= 994531, IoU=0.000
+_________________
+Mean IoU: 0.154
