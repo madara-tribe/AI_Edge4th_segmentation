@@ -15,73 +15,61 @@
 #include <iostream>
 #include <iomanip> //DB
 #include <queue>
-#include <mutex>  //DB
 #include <string>
 #include <vector>
 #include <thread> //DB
 #include <opencv2/opencv.hpp>
-
-// Header files for DNNDK APIs
 #include <dnndk/dnndk.h>
 
-#define IMG_DIR "./img_test/"
-#define OUTPUT_DIR "./output/"
-#define IMAGE_WIDTH 224
-#define IMAGE_HEIGHT 224
-#define NAME_TXT "./test_name.txt"
-#define BUFSIZE 7
-#define IMG_NUM 649
-#define CLS 5
+#include <mutex>  //DB
+std::mutex mtx_;
 
 using namespace std;
 using namespace std::chrono;
 using namespace cv;
 
-/* ****************************************************************************************** */
-int threadnum;
-std::vector<string> img_filenames;
-vector<string> kinds, images; //DB
-const auto for_resize = cv::Size(IMAGE_WIDTH, IMAGE_HEIGHT);
+
 // constants for segmentation network
-#define KERNEL_CONV       "unet_0"
+#define KERNEL_CONV       "unet"
 #define CONV_INPUT_NODE   "conv2d_1_convolution"
-#define CONV_OUTPUT_NODE  "conv2d_24_convolution"
-
+#define CONV_OUTPUT_NODE  "separable_conv2d_1_separable_conv2d"
+#define IMAGEDIR "./workspace/"
+#define OUTPUT_DIR "./output/"
+#define DPU_MODE_NORMAL 0
+#define DPU_MODE_PROF   1
+#define DPU_MODE_DUMP   2
+#define CLS 5
+#define IMG_HEIGHT 304
+#define IMG_WIGHT 480
+#define THREADS 2
+#define BLOCK_SIZE 5
 // colors for segmented classes (that are 19, as in COCO)
-uint8_t colorB[] = {0, 255, 69, 0, 255};
-uint8_t colorG[] = {0, 0, 47, 0, 255};
-uint8_t colorR[] = {0, 0, 142, 255, 0};
+uint8_t colorB[] = {0, 0, 255, 255, 69};
+uint8_t colorG[] = {0, 0, 255, 0, 47};
+uint8_t colorR[] = {0, 255, 0, 0, 142};
 
-// comparison algorithm for priority_queue
-class Compare {
-    public:
-    bool operator()(const pair<int, Mat> &n1, const pair<int, Mat> &n2) const {
-        return n1.first > n2.first;
-    }
-};
-
-/* ****************************************************************************************** */
-//#define SHOWTIME
-
-#ifdef SHOWTIME
-#define _T(func)                                                              \
-    {                                                                         \
-        auto _start = system_clock::now();                                    \
-        func;                                                                 \
-        auto _end = system_clock::now();                                      \
-        auto duration = (duration_cast<microseconds>(_end - _start)).count(); \
-        string tmp = #func;                                                   \
-        tmp = tmp.substr(0, tmp.find('('));                                   \
-        cout << "[TimeTest]" << left << setw(30) << tmp;                      \
-        cout << left << setw(10) << duration << "us" << endl;                 \
-    }
-#else
-#define _T(func) func;
-#endif
-
-/* ****************************************************************************************** */
-
+int image_num;
 /*List all images's name in path.*/
+std::string output_filenames;
+std::vector<string> img_filenames;
+
+#define SLEEP 1
+int t_cnt = 0;
+void barrier(int tid){
+    {
+        std::lock_guard<std::mutex> lock(mtx_);
+        t_cnt++;
+    }
+    while(1){
+        {
+            std::lock_guard<std::mutex> lock(mtx_);
+            if(t_cnt % THREADS == 0) break;
+        }
+        usleep(SLEEP);
+    }
+}
+
+
 vector<string> ListImages(const char *path) {
   vector<string> images;
   images.clear();
@@ -103,227 +91,221 @@ vector<string> ListImages(const char *path) {
 
   while ((entry = readdir(dir)) != nullptr) {
     if (entry->d_type == DT_REG || entry->d_type == DT_UNKNOWN) {
-        std::string name = entry->d_name;
-        std::string ext = name.substr(name.find_last_of(".") + 1);
-        if ((ext == "jpg") || (ext == "png")) {
-            images.push_back(name);
+      string name = entry->d_name;
+      string ext = name.substr(name.find_last_of(".") + 1);
+      if ((ext == "JPEG") || (ext == "jpeg") || (ext == "JPG") ||
+          (ext == "jpg") || (ext == "PNG") || (ext == "png")) {
+          images.push_back(name);
+      }
     }
-   }
   }
 
   closedir(dir);
   sort(images.begin(), images.end());
+  for (size_t i=0; i<images.size(); i++){
+    cout << "names in dir  = "<< images[i] << endl;
+  }
   return images;
 }
 
 
-/* Calculate softmax.*/
-void CPUCalcSoftmax(const float *data, int height, int width, int depth, float *result)
-{
-  assert(data && result);
-  FILE* fp;
-  ifstream ifs(NAME_TXT, ios::in);
-  string tmp;
-  cout << "sofmax pass" << endl;
-  float *local_res = new float [height*width*depth];
+inline double etime_sum(timespec ts02, timespec ts01){
+    return (ts02.tv_sec+(double)ts02.tv_nsec/(double)1000000000)
+            - (ts01.tv_sec+(double)ts01.tv_nsec/(double)1000000000);
+}
+
+
+void PostProc(const float *data, int height, int width, int depth){
+  assert(data);
+  Mat segMat(height, width, CV_8UC3);
   for (int r=0; r<height; r++) { //loop over rows
     for (int c=0; c<width; c++) { //loop over columns
-      double sum = 0.0f;
+      float pix_val[CLS];
       for (int d=0; d<depth; d++) { //loop over depth (classes)
-	local_res[d] = exp(data[d*width*height+r*width +c]);
-	sum=sum+local_res[d];
+            int i = d*width*height+r*width+c;
+            pix_val[d]= data[i];
       }
-      for (int d=0; d<depth; d++) { //loop over depth (classes)
-	local_res[d] = local_res[d]/sum;
-	result[d*width*height+r*width+c] = local_res[d];
-      }
+     auto max_ind = max_element(pix_val, pix_val + CLS);
+     int posit = distance(pix_val, max_ind);
+     segMat.at<Vec3b>(r, c) = Vec3b(colorB[posit], colorG[posit], colorR[posit]);
     }
   }
-  
-  Mat segMat(width, height, CV_8UC3);
-  for (int col = 0; col < height; col++) {
-    for (int row = 0; row < width; row++) {
-      int i = col * IMAGE_HEIGHT * CLS + row * CLS;
-      auto max_ind = max_element(result + i, result + i + CLS);
-      int pos = *max_ind;
-      //int pos = distance(result + i, max_ind);
-      segMat.at<Vec3b>(col, row) = Vec3b(colorB[pos], colorG[pos], colorR[pos]);
-    }
-  }
-  if(getline(ifs, tmp)){
-    cv::imwrite(OUTPUT_DIR+tmp, segMat);
-  };
-  ifs.close();
-  delete[] local_res;
+  cv::imwrite(OUTPUT_DIR + output_filenames, segMat);
 }
+
+
 
 /* Normalize Images and leave them as BGR instead of RGB */
-void normalize_image(const Mat& image, int8_t* data, float scale, float* mean) {
-  for(int i = 0; i < 3; ++i) {
-    for(int j = 0; j < image.rows; ++j) {
-      for(int k = 0; k < image.cols; ++k) {
-	//data[j*image.rows*3+k*3+2-i] = (float(image.at<Vec3b>(j,k)[i])/127.5 -1.0 ) * scale; //from BGR to RGB
-	data[j*image.cols*3+k*3+i] = (float(image.at<Vec3b>(j,k)[i])/255)* scale;
-      }
-     }
-   }
+int8_t normalize_and_quantize(int pixel, int i, int j, int k, float scale)
+{
+    int8_t q_pixel;
+
+    if ((i < IMG_HEIGHT) && (j < IMG_WIGHT))
+        q_pixel = pixel / 255.0 * scale;
+    else
+        q_pixel = 0;
+    return q_pixel;
 }
 
 
-inline void set_input_image(DPUTask *task, const string& input_node, const cv::Mat& image, float* mean)
+void setInputImage(DPUTask *task, const char *inNode, const cv::Mat &image)
 {
-  //Mat cropped_img;
-  DPUTensor* dpu_in = dpuGetInputTensor(task, input_node.c_str());
-  float scale       = dpuGetTensorScale(dpu_in);
-  int width         = dpuGetTensorWidth(dpu_in);
-  int height        = dpuGetTensorHeight(dpu_in);
-  int size          = dpuGetTensorSize(dpu_in);
-  int8_t* data      = dpuGetTensorAddress(dpu_in);
-
-    //cout << "SET INPUT IMAGE: scale = " << scale  << endl; //64
-    //cout << "SET INPUT IMAGE: width = " << width  << endl; //224
-    //cout << "SET INPUT IMAGE: height= " << height << endl; //224
-    //cout << "SET INPUT IMAGE: size  = " << size   << endl; //150528
-  cv::Mat img;
-  cv::resize(image, img, for_resize, cv::INTER_NEAREST);
-  normalize_image(img, data, scale, mean);
+    DPUTensor *in = dpuGetInputTensor(task, inNode);
+    float scale = dpuGetTensorScale(in);
+    int w = dpuGetTensorWidth(in);
+    int h = dpuGetTensorHeight(in);
+    int c = 3;
+    int8_t *data = dpuGetTensorAddress(in);
+    image.forEach<Vec3b>([&](Vec3b &p, const int pos[2]) -> void {
+        int start = pos[0] * w * c + pos[1] * c;
+        for (int k = 0; k < 3; k++)
+            data[start + k] = normalize_and_quantize(p[0], pos[0], pos[1], k, scale);
+    });
 }
 
 
-void run_CNN(DPUTask *taskConv, Mat img)
-{
-  assert(taskConv);
-  
-  // Get info from the the output Tensor
-  DPUTensor *conv_out_tensor = dpuGetOutputTensor(taskConv, CONV_OUTPUT_NODE);
+int main_thread(DPUKernel *kernelConv, int s_num, int e_num, int tid){
+  assert(kernelConv);
+  /*Load all image names */
+  DPUTask *task = dpuCreateTask(kernelConv, DPU_MODE_NORMAL); 
+
+  struct timespec ts01, ts02, ts03, tt01, tt02;
+  double sum1 = 0, sum2 = 0, sum3 = 0, sumt = 0;
+
+  string image_file_name[BLOCK_SIZE];
+  cv::Mat input_image[BLOCK_SIZE];
+
+  DPUTensor *conv_out_tensor = dpuGetOutputTensor(task, CONV_OUTPUT_NODE);
   int outHeight = dpuGetTensorHeight(conv_out_tensor);
   int outWidth  = dpuGetTensorWidth(conv_out_tensor);
-  int outChannel= dpuGetOutputTensorChannel(taskConv, CONV_OUTPUT_NODE);
-  int outSize   = dpuGetTensorSize(conv_out_tensor);
-    //cout << "GET OUTPUT TENSOR: chan =  " << outChannel<< endl; //12
-    //cout << "GET OUTPUT TENSOR: width = " << outWidth  << endl; //224
-    //cout << "GET OUTPUT TENSOR: height= " << outHeight << endl; //224
-    //cout << "GET OUTPUT TENSOR: size  = " << outSize   << endl; //602112
-  cout << "\npass step1" << endl;
-  float *softmax   = new float[outWidth*outHeight*outChannel];
-  float *outTensor = new float[outWidth*outHeight*outChannel];
+  int outChannel= CLS;
+  int outSize = dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE);
+  float outScale = dpuGetOutputTensorScale(task, CONV_OUTPUT_NODE);
+  cout << "GET OUTPUT TENSOR: size  = " << outSize   << endl; //602112
+  
+  // Main Loop
+  int cnt=0;
+  for(cnt=s_num; cnt<=e_num; cnt+=BLOCK_SIZE){
+      clock_gettime(CLOCK_REALTIME, &ts01);
 
-  float mean[3] = {0.0f, 0.0f, 0.0f};
-  cout << "\npass step2" << endl;
-  // Set image into Conv Task with mean value
-  set_input_image(taskConv, CONV_INPUT_NODE, img, mean);
-
-  //cout << "\nRun MNIST CONV ..." << endl;
-  _T(dpuRunTask(taskConv));
-
-  // Get output tensor result and convert from INT8 to FP32 format
-  _T(dpuGetOutputTensorInHWCFP32(taskConv, CONV_OUTPUT_NODE, outTensor, outChannel));
-
-  // Calculate softmax on CPU
-  _T(CPUCalcSoftmax(outTensor, outHeight, outWidth, outChannel, softmax));
-
-
-  delete[] softmax;
-  delete[] outTensor;
-
-}
-
-
-
-/**
- * @brief entry routine of segmentation, and put image into display queue
- *
- * @param task - pointer to Segmentation Task
- * @param is_running - status flag of the thread
- *
- * @return none
- */
-void runSegmentation(DPUKernel *kernelConv)
-{
-  /*Load all image names */
-  cv::Mat input_image[IMG_NUM];
-
-  img_filenames = ListImages(IMG_DIR);
-   
-#define DPU_MODE_NORMAL 0
-#define DPU_MODE_PROF   1
-#define DPU_MODE_DUMP   2
-
-  thread workers[threadnum];
-  auto _start = system_clock::now();
-
-  for (auto i = 0; i < threadnum; i++)
-  {
-  workers[i] = thread([&,i]()
-  {
-
-    /* Create DPU Tasks for CONV  */
-    DPUTask *taskConv = dpuCreateTask(kernelConv, DPU_MODE_NORMAL); // profiling not enabled
-    //DPUTask *taskConv = dpuCreateTask(kernelConv, DPU_MODE_PROF); // profiling enabled
-    //enable profiling
-    //int res1 = dpuEnableTaskProfile(taskConv);
-    //if (res1!=0) printf("ERROR IN ENABLING TASK PROFILING FOR CONV KERNEL\n");
-
-    for(unsigned int ind = i  ;ind < images.size();ind+=threadnum)
-      {
-        input_image[ind] = cv::imread(IMG_DIR+img_filenames[ind], IMREAD_UNCHANGED);
-        if (input_image[i].empty()){
-            printf("cannot load %s%s\n", IMG_DIR, img_filenames[ind].c_str());
+      for(int i=0; i<BLOCK_SIZE;i++){
+        if(cnt+i>e_num) break;
+        image_file_name[i] = img_filenames[cnt+i];
+        input_image[i] = cv::imread(IMAGEDIR+image_file_name[i]);
+        if (input_image[i].empty()) {
+            printf("cannot load %s\n", image_file_name[i].c_str());
             abort();
-        };
-        cout << "DBG imread " << input_image[ind] << endl;
-        run_CNN(taskConv, input_image[ind]);
+        }
       }
-    // Destroy DPU Tasks & free resources
-    dpuDestroyTask(taskConv);
-  });
-  }
+      
+      barrier(tid);
 
-  // Release thread resources.
-  for (auto &w : workers) {
-    if (w.joinable()) w.join();
-  }
+      usleep(1000);
+      clock_gettime(CLOCK_REALTIME, &ts02);
+      sum1 += etime_sum(ts02,ts01);
+      barrier(tid);
 
-  auto _end = system_clock::now();
-  auto duration = (duration_cast<microseconds>(_end - _start)).count();
-  cout << "[Time]" << duration << "us" << endl;
-  cout << "[FPS]" << images.size()*1000000.0/duration  << endl;
+      for(int i=0; i<BLOCK_SIZE;i++){
+        if(cnt+i>e_num) break;
+        output_filenames = image_file_name[i];
+        cout << "filename : " << image_file_name[i] << endl;
+        // resize
+        cv::Mat img;
+        resize(input_image[i], img, Size(IMG_WIGHT, IMG_HEIGHT), INTER_NEAREST);
+  
+        int8_t *outAddr = (int8_t *)dpuGetOutputTensorAddress(task, CONV_OUTPUT_NODE);
+        float *softmax = new float[outWidth*outHeight*outChannel];
+        
+        // Set image into Conv Task with mean value
+        setInputImage(task, CONV_INPUT_NODE, img);
+        {
+            std::lock_guard<std::mutex> lock(mtx_);
+            dpuRunTask(task);
+            // Calculate softmax on DPU 
+            dpuRunSoftmax(outAddr, softmax, outChannel,outSize/outChannel, outScale);
+        }
+        // Post process
+        PostProc(softmax, outHeight, outWidth, outChannel);
+
+        delete[] softmax;
+        cout << " delete[] softmax; " << endl;
+        double tmp_time = etime_sum(tt02, tt01);
+        sumt += tmp_time;
+      }
+
+      barrier(tid);
+      clock_gettime(CLOCK_REALTIME, &ts03);
+      sum2 += etime_sum(ts03, ts02);
+      sum3 += etime_sum(ts03, ts01);
+  }
+  dpuDestroyTask(task);
+  printf("sum1 : loaded images time : %8.3lf[s]\n", sum1);
+  printf("sum2 : proproc dpu postproc time: %8.3lf[s]\n", sum2);
+  printf("FPS        : %8.3lf (%8.3lf [ms])\n", (float)image_num/sum2, (float)sum2/image_num*1000);   
+
+  int tmp = image_num%(THREADS*BLOCK_SIZE);
+  //printf("%d %d\n", tid, tmp);
+  if(tid >= tmp){
+      usleep(SLEEP);
+      barrier(tid);
+      usleep(SLEEP);
+      barrier(tid);
+      usleep(SLEEP);
+      barrier(tid);
+   }
+  
+   return 0;
 }
 
-/**
- * @brief Entry for runing Segmentation neural network
- *
- * @arg file_name[string] - path to file for detection
- *
- */
-int main(int argc, char **argv)
-{
 
+int main(int argc, char **argv){
   // DPU Kernels/Tasks for runing SSD
   DPUKernel *kernelConv;
-
   // Check args
-  if(argc == 2) {
-    threadnum = stoi(argv[1]);
-    cout << "now running " << argv[0] << " " << argv[1] << endl;
+  cout << "now running " << argv[0] << endl;
+  img_filenames = ListImages(IMAGEDIR);
+  if (img_filenames.size() == 0) {
+    cout << "\nError: Not images exist in " << IMAGEDIR << endl;
+  } else {
+    image_num = img_filenames.size();
+    cout << "total image : " << img_filenames.size() << endl;
   }
-  else
-      cout << "now running " << argv[0] << endl;
+  
+  int th_srt[THREADS];
+  int th_end[THREADS];
+  th_srt[0] = 0;
+  th_end[0] = image_num / THREADS;
+  if((image_num%THREADS)==0) {
+      th_end[0]--;
+  }
+  for(int i=1;i<THREADS;i++){
+      th_srt[i] = th_end[i-1]+1;
+      th_end[i] = th_srt[i]+(image_num / THREADS);
+      if(i>=(image_num%THREADS)){
+          th_end[i]--;
+      }
+  }
 
+  for(int i=0;i<THREADS;i++){
+      printf("th_srt[%d] = %d, th_end[%d] = %d\n", i, th_srt[i], i, th_end[i]);
+  }
   // Attach to DPU driver and prepare for runing
   dpuOpen();
-
-  // Create DPU Kernels and Tasks for CONV Nodes in FCN8
   kernelConv = dpuLoadKernel(KERNEL_CONV);
+  // Parallel processing
+  vector<thread> ths;
+  for (int i = 1; i < THREADS; i++){
+      ths.emplace_back(thread(main_thread, kernelConv, th_srt[i], th_end[i], i));
+  }
+  main_thread(kernelConv, th_srt[0], th_end[0], 0);
 
-  /* run FCN8 Semantic Segmentation */
-  runSegmentation(kernelConv);
-
-  // Destroy DPU T Kernels and free resources
+  for (auto& th: ths){
+      th.join();
+  }
+  //
   dpuDestroyKernel(kernelConv);
-
-  // Detach from DPU driver and release resources
   dpuClose();
-  
+  cout << "\nFinished ..." << endl;
+
   return 0;
 }
