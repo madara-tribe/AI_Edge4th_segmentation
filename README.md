@@ -18,9 +18,18 @@ input image & result image
 
 ## Quantized machine learning model architecture(Unet)
 
+<img src="https://user-images.githubusercontent.com/48679574/103159101-9d3eaa00-4808-11eb-906f-cc255b28a4eb.png" width="500px">
+
+
 ## Hardwar platform 
 
+<img src="https://user-images.githubusercontent.com/48679574/103159128-e8f15380-4808-11eb-8903-15ab326f94a5.png" width="500px">
+
+
 ## Parallel processing by c++ multi thread
+
+<img src="https://user-images.githubusercontent.com/48679574/103159116-c52e0d80-4808-11eb-8bfa-0e7a8a55a670.png" width="500px">
+
 
 ## this logic is summirized my blog 
 
