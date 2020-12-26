@@ -1,9 +1,0 @@
-Use tf.cast instead.
-
- TF input node name:
-[<tf.Tensor 'input_1:0' shape=(?, 224, 224, 3) dtype=float32>]
-
- TF output node name:
-[<tf.Tensor 'conv2d_23/Sigmoid:0' shape=(?, 224, 224, 11) dtype=float32>]
-
-FINISHED CREATING TF FILES

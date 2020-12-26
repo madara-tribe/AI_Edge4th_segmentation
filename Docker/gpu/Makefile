@@ -8,7 +8,7 @@ run4:
 	docker build -t aug_pre2 .
 
 in:
-	NV_GPU=3 nvidia-docker run --runtime=nvidia -v /home/hagi:/home/app/sig --rm -it unet_train:latest bash
+	NV_GPU=2 nvidia-docker run --runtime=nvidia -v /home/hagi:/home/app/sig --rm -it unet_train:latest bash
 
 in2:
 	NV_GPU=0 nvidia-docker run --runtime=nvidia -v /home/hagi:/home/app/sig --rm -it unet_noaug_train:latest bash

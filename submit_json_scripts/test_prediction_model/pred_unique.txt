@@ -1,6 +1,0 @@
-print(X_test.shape, y_pred1_i.shape)
-print(np.unique(y_pred1_i))
-
-now computing IoU over testing data set:
-(649, 224, 224, 3) (649, 224, 224)
-[0 1 2 3 4]

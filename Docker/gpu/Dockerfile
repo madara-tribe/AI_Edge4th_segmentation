@@ -1,4 +1,6 @@
-FROM nvidia/cuda:8.0-cudnn6-devel-ubuntu16.04
+FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu16.04
+ENV CUDA_VERSION 10.0
+ENV TF_VERSION 1.13.1
 ENV PYTHON_VERSION 3.7.0
 WORKDIR /home/app
 RUN apt-get update && apt-get upgrade -y
@@ -33,8 +35,8 @@ RUN ln -s /usr/local/bin/python3.7 /bin/python3 && \
 # install pip
 
 RUN pip3 install --upgrade pip
+RUN pip3 install tensorflow-gpu==${TF_VERSION}
+RUN pip3 install keras==2.2.4
 RUN pip3 install scikit-learn matplotlib seaborn tqdm pandas opencv-python
-RUN apt-get install -y libgl1-mesa-dev
-RUN pip3 install cupy-cuda80
-
+RUN pip3 install keras-rectified-adam 
 CMD [ "/bin/bash" ]
