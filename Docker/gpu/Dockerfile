@@ -38,5 +38,4 @@ RUN pip3 install --upgrade pip
 RUN pip3 install tensorflow-gpu==${TF_VERSION}
 RUN pip3 install keras==2.2.4
 RUN pip3 install scikit-learn matplotlib seaborn tqdm pandas opencv-python
-RUN pip3 install keras-rectified-adam 
 CMD [ "/bin/bash" ]
