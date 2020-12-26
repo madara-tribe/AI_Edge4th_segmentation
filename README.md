@@ -1,6 +1,7 @@
 # AI_Edge_for_segmentation
 
-This is quantized model working on hardware as FPGA(ultra96v2).
+This is SIGNATE 4th AI Edge Contest results that are quantized model working on hardware as FPGA(ultra96v2).
+
 Simply, show this repositry characteristic parts.
 
 # segmentation result by quantized model on FPGA
