@@ -1,5 +1,7 @@
 # AI_Edge_for_segmentation
 
+This is quantized model working on hardware as FPGA(ultra96v2).
+Simply, show this repositry characteristic parts.
 
 # segmentation result by quantized model on FPGA
 
@@ -17,6 +19,12 @@ input image & result image
 # this AI eadge characteristic point
 
 ## Quantized machine learning model architecture(Unet)
+
+model libarary version is 
+```
+keras==2.2.4
+tensorflow==1.13.1
+```
 
 <img src="https://user-images.githubusercontent.com/48679574/103159101-9d3eaa00-4808-11eb-906f-cc255b28a4eb.png" width="500px">
 
