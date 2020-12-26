@@ -40,6 +40,6 @@ tensorflow==1.13.1
 <img src="https://user-images.githubusercontent.com/48679574/103159116-c52e0d80-4808-11eb-8bfa-0e7a8a55a670.png" width="500px">
 
 
-## this logic is summirized in my blog 
+## this logic is summarized in my blog 
 
 
