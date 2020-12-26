@@ -30,16 +30,16 @@ tensorflow==1.13.1
 <img src="https://user-images.githubusercontent.com/48679574/103159101-9d3eaa00-4808-11eb-906f-cc255b28a4eb.png" width="500px">
 
 
-## Hardwar platform 
+## Hardware platform 
 
 <img src="https://user-images.githubusercontent.com/48679574/103159128-e8f15380-4808-11eb-8903-15ab326f94a5.png" width="500px">
 
 
-## Parallel processing by c++ multi thread
+## Parallel processing by C++ Multiple thread
 
 <img src="https://user-images.githubusercontent.com/48679574/103159116-c52e0d80-4808-11eb-8bfa-0e7a8a55a670.png" width="500px">
 
 
-## this logic is summirized my blog 
+## this logic is summirized in my blog 
 
 
