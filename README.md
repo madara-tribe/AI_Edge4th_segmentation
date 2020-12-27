@@ -1,6 +1,6 @@
 # AI_Edge_segmentation
 
-This is SIGNATE 4th AI Edge Contest results that are mainly quantized model working on hardware as FPGA(ultra96v2).
+This is SIGNATE 4th AI Edge Contest results that are mainly quantized segmentation model working on hardware as FPGA(ultra96v2).
 
 Simply, show this repositry characteristic parts.
 
