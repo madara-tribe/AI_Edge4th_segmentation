@@ -41,5 +41,6 @@ tensorflow==1.13.1
 
 
 ## this logic is summarized in my blog 
+https://trafalbad.hatenadiary.jp/entry/2020/12/21/123343
 
 
